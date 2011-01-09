@@ -24,45 +24,6 @@ vnoremap <silent>ac :<C-u>call ClassTextObject(0)<CR><Esc>gv
 vnoremap <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
 
 
-function! IndentTextObject(inner)
-  if index(g:indentobject_meaningful_indentation, &filetype) >= 0
-    let meaningful_indentation = 1
-  else
-    let meaningful_indentation = 0
-  endif
-  let curline = line(".")
-  let lastline = line("$")
-  let i = indent(line(".")) - &shiftwidth * (v:count1 - 1)
-  let i = i < 0 ? 0 : i
-  if getline(".") =~ "^\\s*$"
-    return
-  endif
-  let p = line(".") - 1
-  let nextblank = getline(p) =~ "^\\s*$"
-  while p > 0 && (nextblank || indent(p) >= i )
-    -
-    let p = line(".") - 1
-    let nextblank = getline(p) =~ "^\\s*$"
-  endwhile
-  if (!a:inner)
-    -
-  endif
-  normal! 0V
-  call cursor(curline, 0)
-  let p = line(".") + 1
-  let nextblank = getline(p) =~ "^\\s*$"
-  while p <= lastline && (nextblank || indent(p) >= i )
-    +
-    let p = line(".") + 1
-    let nextblank = getline(p) =~ "^\\s*$"
-  endwhile
-  if (!a:inner && !meaningful_indentation)
-    +
-  endif
-  normal! $
-endfunction
-
-
 " In certain situations, it allows you to echo something without 
 " having to hit Return again to do exec the command.
 function! s:Echo(msg)
@@ -73,21 +34,16 @@ function! s:Echo(msg)
   let &ruler=x | let &showcmd=y
 endfun
 
-"}}}
-
-"{{{ Main Functions 
-
 " Select an object ("class"/"function")
-function! s:PythonSelectObject(obj)
+function! s:PythonSelectObject(obj, inner)
   " Go to the object declaration
   normal $
-  let rev = s:FindPythonObject(a:obj, -1)
+  let rev = s:FindPythonObject(a:obj)
   if (! rev)
-    let fwd = s:FindPythonObject(a:obj, 1)
-    if (! fwd)
-      return
-     endif
-   endif
+    return
+  endif
+
+  "TODO: af/ac should include decorators
 
   let beg = line('.')
   exec beg
@@ -120,28 +76,14 @@ function! s:NextIndent(fwd)
 endfunction
  
 
-" Go to previous (-1) or next (1) class/function definition
-" return a line number that matches either a class or a function
-" to call this manually:
-" Backwards:
-"     :call FindPythonObject("class", -1)
-" Forwards:
-"     :call FindPythonObject("class")
-" Functions Backwards:
-"     :call FindPythonObject("function", -1)
-" Functions Forwards:
-"     :call FindPythonObject("function")
-function! s:FindPythonObject(obj, direction)
+function! s:FindPythonObject(obj)
   if (a:obj == "class")
     let objregexp = "^\\s*class\\s\\+[a-zA-Z0-9_]\\+"
         \ . "\\s*\\((\\([a-zA-Z0-9_,. \\t\\n]\\)*)\\)\\=\\s*:"
   else
     let objregexp = "^\\s*def\\s\\+[a-zA-Z0-9_]\\+\\s*(\\_[^:#]*)\\s*:"
   endif
-  let flag = "W"
-  if (a:direction == -1)
-    let flag = flag."b"
-  endif
+  let flag = "Wb"
   let result = search(objregexp, flag)
   if result
       return line('.') 
@@ -149,18 +91,13 @@ function! s:FindPythonObject(obj, direction)
       return 
   endif
 endfunction
-"}}}
 
-"{{{ Misc 
-"command! -nargs=0 ChapaVisualFunction call s:PythonSelectObject("function")
-"command! -nargs=0 ChapaVisualClass call s:PythonSelectObject("class")
-"}}}
 
 function! FunctionTextObject(inner)
-    call s:PythonSelectObject('function')
+    call s:PythonSelectObject('function', a:inner)
 endfunction
 
 
 function! ClassTextObject(inner)
-    call s:PythonSelectObject('class')
+    call s:PythonSelectObject('class', a:inner)
 endfunction
