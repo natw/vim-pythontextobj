@@ -1,0 +1,40 @@
+This plugin provides custom text objects for selecting python functions or classes.
+
+I don't believe that it depends on any other plugins or other weirdness.  I run vim 7.3, but I tested it for about 30 seconds in 7.2 and nothing broke horribly.
+
+Usage
+=====
+
+The two new text object targets contained herein are `c` and `f`, describing classes and functions respectively.
+As you might expect, this gives you the objects `ac`, `ic`, `af`, and `if`.
+
+Unfortunately what exactly should constitute the "inner" and "outer" portions of a function or class is not entirely clear to me at this time.
+So for the moment, the only difference is that the outer objects include any trailing blank lines, while the inner ones do not.
+Watch this space for developments in this matter.
+
+Actual usage should be pretty intuitive to anyone familiar with text objects.
+With the cursor on any line inside of a function, `vaf` will visually select the entire function along with whatever blank lines that follow it.
+And so on.
+
+Issues
+======
+
+I'm still adjusting my expectations of what inner vs outer objects should do in this case so that behavior might change.
+I do know that outer should include decorators, so that's something I still need to do.
+I'm not really sure if there's ever a case for working on the actual insides of a function, as in everything but the definition.
+
+Nested functions are a little squirelly at the moment.
+
+But in common, garden-path cases, I think this pretty much works.
+
+Installation
+============
+
+Since this only really applies to python, I put pythontextobj.vim in `~/.vim/ftplugin/python/`.
+Though, if you wanted to put it in `~/.vim/plugin/`, I don't suppose that would actually break anything, and perhaps it might even be useful for some other language.
+
+Credits
+=======
+
+A lot of this code was lifted from Alfredo Deza's [chapa](https://github.com/alfredodeza/chapa.vim).
+Austin Taylor's [indentobj](https://github.com/austintaylor/vim-indentobject) was also informative, but I don't think I stole anything from him.
