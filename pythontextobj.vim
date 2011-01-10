@@ -24,16 +24,6 @@ vnoremap <silent>ac :<C-u>call ClassTextObject(0)<CR><Esc>gv
 vnoremap <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
 
 
-" In certain situations, it allows you to echo something without 
-" having to hit Return again to do exec the command.
-function! s:Echo(msg)
-  let x=&ruler | let y=&showcmd
-  set noruler noshowcmd
-  redraw
-  echo a:msg
-  let &ruler=x | let &showcmd=y
-endfun
-
 " Select an object ("class"/"function")
 function! s:PythonSelectObject(obj, inner)
   " Go to the object declaration
@@ -49,6 +39,11 @@ function! s:PythonSelectObject(obj, inner)
   exec beg
 
   let until = s:NextIndent(1)
+
+  if a:inner " don't include trailing blank lines if inner used
+    let until = prevnonblank(until)
+  endif
+
   let line_moves = until - beg
   
   if line_moves > 0
@@ -77,6 +72,7 @@ endfunction
  
 
 function! s:FindPythonObject(obj)
+  " TODO: don't match definitions at equal or greater indent
   if (a:obj == "class")
     let objregexp = "^\\s*class\\s\\+[a-zA-Z0-9_]\\+"
         \ . "\\s*\\((\\([a-zA-Z0-9_,. \\t\\n]\\)*)\\)\\=\\s*:"
