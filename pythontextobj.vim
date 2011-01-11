@@ -27,25 +27,37 @@ vnoremap <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
 " Select an object ("class"/"function")
 function! s:PythonSelectObject(obj, inner)
   " Go to the object declaration
+  let cursor_pos = line('.')
   normal $
-  let rev = s:FindPythonObject(a:obj)
-  if (! rev)
+  let start_line = s:FindPythonObjectStart(a:obj, a:inner)
+  call Decho('start_line: '.start_line)
+  if (! start_line)
     return
   endif
+  call Decho("cursor: ".line('.'))
 
   "TODO: af/ac should include decorators
 
-  let beg = line('.')
-  exec beg
+  "exec start_line
 
-  let until = s:NextIndent(1)
+  if a:inner
+    let until = s:NextIndent(start_line)
+  else
+    let until = s:NextIndent(start_line+1) " assumes 1 decorator
+  endif
+  call Decho("until: ".until)
 
   if a:inner " don't include trailing blank lines if inner used
     let until = prevnonblank(until)
   endif
 
-  let line_moves = until - beg
+  if until < cursor_pos " we only care about objects we're actually inside
+    return
+  endif
+
+  let line_moves = until - start_line 
   
+  " TODO: breaks on last function in file
   if line_moves > 0
     execute "normal V" . line_moves . "j"
   else
@@ -54,24 +66,24 @@ function! s:PythonSelectObject(obj, inner)
 endfunction
 
 
-function! s:NextIndent(fwd)
-  let line = line('.')
+function! s:NextIndent(start)
+  let line = a:start
   let column = col('.')
   let lastline = line('$')
   let indent = indent(line)
-  let stepvalue = a:fwd ? 1 : -1
+  let stepvalue = 1
 
   while (line > 0 && line <= lastline)
     let line = line + stepvalue
 
-    if (indent(line) <= indent && strlen(getline(line)) > 0)
+    if (indent(line) <= indent && getline(line) !~ '^\s*$')
       return line - 1
     endif
   endwhile
 endfunction
  
 
-function! s:FindPythonObject(obj)
+function! s:FindPythonObjectStart(obj, inner)
   " TODO: don't match definitions at equal or greater indent
   if (a:obj == "class")
     let objregexp = "^\\s*class\\s\\+[a-zA-Z0-9_]\\+"
@@ -79,13 +91,20 @@ function! s:FindPythonObject(obj)
   else
     let objregexp = "^\\s*def\\s\\+[a-zA-Z0-9_]\\+\\s*(\\_[^:#]*)\\s*:"
   endif
-  let flag = "Wb"
-  let result = search(objregexp, flag)
-  if result
-      return line('.') 
-  else 
-      return 
+  let result = search(objregexp, "Wb")
+  if (! result)
+    return
+  endif 
+  if (! a:inner)
+    call Decho('including decorators')
+    " include decorators
+    let decs = search('\v^(.*\@[a-zA-Z])', "Wbc")
+    call Decho(decs)
+    if decs
+      return decs
+    endif
   endif
+  return result
 endfunction
 
 
