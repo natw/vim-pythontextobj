@@ -9,6 +9,7 @@
 "              (https://github.com/austintaylor/vim-indentobject)
 "============================================================================
 
+
 if (exists("g:loaded_pythontextobj") && g:loaded_pythontextobj)
   finish
 endif
@@ -27,27 +28,22 @@ vnoremap <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
 " Select an object ("class"/"function")
 function! s:PythonSelectObject(obj, inner)
 
-  "call Decho('')
   " find definition line
   let start_line = s:FindPythonObjectStart(a:obj)
   if (! start_line)
     return
   endif
-  "call Decho('start_line: ', start_line)
   
   " get end (w/ or w/out whitespace)
   let until = s:ObjectEnd(start_line, a:inner)
-  "call Decho('until: ', until)
 
   " include decorators
   if (! a:inner)
     let start_line = s:StartDecorators(start_line)
-    "call Decho('start_line: ', start_line)
   endif
 
   " select range
   let line_moves = until - start_line
-  "call Decho('line_moves: ', line_moves)
   exec start_line
   if line_moves > 0
     execute "normal V" . line_moves . "j"
@@ -55,44 +51,6 @@ function! s:PythonSelectObject(obj, inner)
     execute "normal VG" 
   endif
 
-
-  "" Go to the object declaration
-  "let cursor_pos = line('.')
-  "normal $
-  "let start_line = s:FindPythonObjectStart(a:obj, a:inner)
-  "call Decho('start_line: '.start_line)
-  "if (! start_line)
-    "return
-  "endif
-  "call Decho("cursor: ".line('.'))
-
-  ""TODO: af/ac should include decorators
-
-  ""exec start_line
-
-  "if a:inner
-    "let until = s:NextIndent(start_line)
-  "else
-    "let until = s:NextIndent(start_line+1) " assumes 1 decorator
-  "endif
-  "call Decho("until: ".until)
-
-  "if a:inner " don't include trailing blank lines if inner used
-    "let until = prevnonblank(until)
-  "endif
-
-  "if until < cursor_pos " we only care about objects we're actually inside
-    "return
-  "endif
-
-  "let line_moves = until - start_line 
-  
-  "" TODO: breaks on last function in file
-  "if line_moves > 0
-    "execute "normal V" . line_moves . "j"
-  "else
-    "execute "normal VG" 
-  "endif
 endfunction
 
 
@@ -120,14 +78,23 @@ endfunction
  
 
 function! s:StartDecorators(start)
+  " get def/class start pos
+  " move upwards, breaking on first line of different indent that doesn't
+  " start w/ @
   exec a:start
-  normal 0
-  let result = search("^$", "Wbn") " for the moment, I assume that there is a blank line above any decorators
-  " and actually I'm assuming there's a blank line above a function def with
-  " no decorators
-  " FIXME
-  "call Decho('decorator result: ', result)
-  return result + 1
+  normal ^
+  let def_indent = indent(line("."))
+  let found = 0
+  while (! found)
+    normal k
+    let ln = line(".")
+    if (ln == 1)
+      return ln
+    endif
+    if (indent(ln) != def_indent || getline(ln) =~ '\v^\s*[^@].+$')
+      return line(".") + 1
+    endif
+  endwhile
 endfunction
 
 
@@ -158,6 +125,7 @@ function! s:FindPythonObjectStart(obj)
   exec cursor_start_pos
   return result
 endfunction
+
 
 function! FunctionTextObject(inner)
     call s:PythonSelectObject('function', a:inner)
