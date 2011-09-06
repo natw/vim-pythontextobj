@@ -15,14 +15,14 @@ if (exists("g:loaded_pythontextobj") && g:loaded_pythontextobj)
 endif
 let g:loaded_pythontextobj = 1
 
-onoremap <silent>af :<C-u>call FunctionTextObject(0)<CR>
-onoremap <silent>if :<C-u>call FunctionTextObject(1)<CR>
-vnoremap <silent>af :<C-u>call FunctionTextObject(0)<CR><Esc>gv
-vnoremap <silent>if :<C-u>call FunctionTextObject(1)<CR><Esc>gv
-onoremap <silent>ac :<C-u>call ClassTextObject(0)<CR>
-onoremap <silent>ic :<C-u>call ClassTextObject(1)<CR>
-vnoremap <silent>ac :<C-u>call ClassTextObject(0)<CR><Esc>gv
-vnoremap <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
+onoremap <buffer> <silent>af :<C-u>call FunctionTextObject(0)<CR>
+onoremap <buffer> <silent>if :<C-u>call FunctionTextObject(1)<CR>
+vnoremap <buffer> <silent>af :<C-u>call FunctionTextObject(0)<CR><Esc>gv
+vnoremap <buffer> <silent>if :<C-u>call FunctionTextObject(1)<CR><Esc>gv
+onoremap <buffer> <silent>ac :<C-u>call ClassTextObject(0)<CR>
+onoremap <buffer> <silent>ic :<C-u>call ClassTextObject(1)<CR>
+vnoremap <buffer> <silent>ac :<C-u>call ClassTextObject(0)<CR><Esc>gv
+vnoremap <buffer> <silent>ic :<C-u>call ClassTextObject(1)<CR><Esc>gv
 
 
 " Select an object ("class"/"function")
