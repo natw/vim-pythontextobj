@@ -102,7 +102,12 @@ function! s:FindPythonObjectStart(obj)
   " TODO: don't match definitions at equal or greater indent unless it matches
   " at cursor position
   let cursor_start_pos = line(".")
-  let cursor_indent = indent(cursor_start_pos)
+  " Empty lines have the indentation of the previous non-empty line in python,
+  " so we skip backwards until we find one that is not empty
+  while (getline(".") =~ '^\s*$') && (line(".") > 1)
+      exec line(".") - 1
+  endwhile
+  let cursor_indent = indent(line("."))
   if (a:obj == "class")
     let objregexp = "^\\s*class\\s\\+[a-zA-Z0-9_]\\+"
         \ . "\\s*\\((\\([a-zA-Z0-9_,. \\t\\n]\\)*)\\)\\=\\s*:"
