@@ -75,26 +75,19 @@ function! s:NextIndent(start)
   endwhile
   return lastline
 endfunction
- 
+
 
 function! s:StartDecorators(start)
-  " get def/class start pos
-  " move upwards, breaking on first line of different indent that doesn't
-  " start w/ @
+  " Returns the line of the first decorator line above the starting line,
+  " counting only decorators with the same level.
   exec a:start
   normal ^
   let def_indent = indent(line("."))
-  let found = 0
-  while (! found)
+  normal k
+  while (indent(line(".") == def_indent) && getline(".") =~ '\v^\s*\@')
     normal k
-    let ln = line(".")
-    if (ln == 1)
-      return ln
-    endif
-    if (indent(ln) != def_indent || getline(ln) =~ '\v^\s*[^@].+$')
-      return line(".") + 1
-    endif
   endwhile
+  return line(".") + 1
 endfunction
 
 
